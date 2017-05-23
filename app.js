@@ -42,22 +42,6 @@ function(request, response){
   response.json({user: request.currentUser}) 
 })
 
-app.post('/login', function(request, response){
-  User.findOne({
-    where:{email: request.body.email}
-  }).then((user)=>{
-    if(user && user.verifyPassword(request.body.password)){
-      response.json({
-        message: 'Success!',
-        user: user
-      })
-    }else{
-      response.status(404)
-      response.json({message: 'Invalid Credentials'})
-    }
-  })
-})
-
 app.post('/users', function(request, response){
   User.create(
     {
