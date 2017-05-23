@@ -2,6 +2,12 @@ var express = require('express');
 var bodyParser = require('body-parser')
 var app = express();
 var User = require('./models').User
+var cors = require('cors')
+
+const corsOptions = {
+  origin: 'http://localhost:3000'
+}
+app.use(cors())
 
 app.use(express.static('public'))
 app.use(bodyParser.json())
@@ -16,12 +22,12 @@ const authorization = function(request, response, next){
         request.currentUser = user
         next()
       }else{
-        response.status = 401
+        response.status(401)
         response.json({message:'Authorization Token Invalid'})
       }
     })
   }else{
-    response.status = 401
+    response.status(401)
     response.json({message: 'Authorization Token Required'})
   }
 }
@@ -34,6 +40,22 @@ app.get('/user',
 authorization,
 function(request, response){
   response.json({user: request.currentUser}) 
+})
+
+app.post('/login', function(request, response){
+  User.findOne({
+    where:{email: request.body.email}
+  }).then((user)=>{
+    if(user && user.verifyPassword(request.body.password)){
+      response.json({
+        message: 'Success!',
+        user: user
+      })
+    }else{
+      response.status(404)
+      response.json({message: 'Invalid Credentials'})
+    }
+  })
 })
 
 app.post('/users', function(request, response){
@@ -50,7 +72,7 @@ app.post('/users', function(request, response){
       user: user
     })
   }).catch((error)=>{
-    response.status = 400
+    response.status(400)
     response.json({
       message: "Unable to create User",
       errors: error.errors
